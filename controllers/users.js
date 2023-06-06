@@ -10,14 +10,14 @@ const getUsers = (req, res) => {
 
 const getUsersById = (req, res) => {
   User.findById(req.params.id)
-    .orFail(() => new Error("Not found"))
-    .then((user) => res.status(200).send(user))
-    .catch((err) => {
-      if (err.message === "Not found") {
-        res.status(404).send({ message: "User not found" });
-      } else {
-        res.status(500).send({ message: "Server Error", err: err.message });
+    .then((user) => {
+      if (!user) {
+        res.status(400).send({ message: "Пользователь не найден" });
+        return;
       }
+      res.status(200).send(user)})
+    .catch((err) => {
+        res.status(500).send({ message: "Server Error", err: err.message });
     });
 };
 
@@ -37,15 +37,21 @@ const updateProfile = (req, res) => {
   User.findByIdAndUpdate(req.user._id, {
     name: req.body.name,
     about: req.body.about,
-  })
+  },
+  {new: try})
     .then((user) => {
       if (!user) {
-        res.status(404).send({ message: "Пользователь не найден" });
+        res.status(400).send({ message: "Пользователь не найден" });
         return;
       }
       res.send({ data: user });
     })
-    .catch((err) => res.status(500).send({ message: "Произошла ошибка" }));
+    .catch((err) => {
+      if(err.name === "ValidationError") {
+        res.status(400).send({ message: "Данные некорректны" });
+      }
+    }
+     res.status(500).send({ message: "Произошла ошибка" }));
 };
 
 const updateAvatar = (req, res) => {
