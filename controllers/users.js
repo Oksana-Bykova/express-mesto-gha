@@ -15,9 +15,10 @@ const getUsersById = (req, res) => {
         res.status(400).send({ message: "Пользователь не найден" });
         return;
       }
-      res.status(200).send(user)})
+      res.status(200).send(user);
+    })
     .catch((err) => {
-        res.status(500).send({ message: "Server Error", err: err.message });
+      res.status(500).send({ message: "Server Error", err: err.message });
     });
 };
 
@@ -34,11 +35,14 @@ const createUser = (req, res) => {
 };
 
 const updateProfile = (req, res) => {
-  User.findByIdAndUpdate(req.user._id, {
-    name: req.body.name,
-    about: req.body.about,
-  },
-  {new: try})
+  User.findByIdAndUpdate(
+    req.user._id,
+    {
+      name: req.body.name,
+      about: req.body.about,
+    },
+    { new: true }
+  )
     .then((user) => {
       if (!user) {
         res.status(400).send({ message: "Пользователь не найден" });
@@ -47,11 +51,12 @@ const updateProfile = (req, res) => {
       res.send({ data: user });
     })
     .catch((err) => {
-      if(err.name === "ValidationError") {
+      if (err.name === "ValidationError") {
         res.status(400).send({ message: "Данные некорректны" });
+        return;
       }
-    }
-     res.status(500).send({ message: "Произошла ошибка" }));
+      res.status(500).send({ message: "Произошла ошибка" });
+    });
 };
 
 const updateAvatar = (req, res) => {
