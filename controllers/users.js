@@ -12,12 +12,16 @@ const getUsersById = (req, res) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        res.status(400).send({ message: "Пользователь не найден" });
+        res.status(404).send({ message: "Пользователь не найден" });
         return;
-      }
+      };
       res.status(200).send(user);
     })
     .catch((err) => {
+      if(typeof(req.params.userId) != 'ObjectId' ) {
+        res.status(400).send({ message: "Данные некорректны" });
+        return;
+      }
       res.status(500).send({ message: "Server Error", err: err.message });
     });
 };
