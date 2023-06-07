@@ -24,25 +24,42 @@ const createCard = (req, res) => {
 };
 
 const deleteCard = (req, res) => {
-  Card.findByIdAndRemove (req.params.id)
-  .then((card) => res.status(202).send({ message: "Карточка успешно удалена" }))
-  .catch(err => res.status(500).send({ message: 'Произошла ошибка' }));
+  Card.findByIdAndRemove(req.params.id)
+    .then((card) =>
+      res.status(202).send({ message: "Карточка успешно удалена" })
+    )
+    .catch((err) => res.status(500).send({ message: "Произошла ошибка" }));
 };
 
 const likeCard = (req, res) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
-    { new: true },
-  )
+    { new: true }
+  ).then((card) => {
+    if (!card) {
+      res.status(404).send({ message: "Карточка не найдена" });
+      return;
+    }
+    res
+      .status(200)
+      .send({ message: "Лайк добавлен" })
+      .catch((err) =>
+        res.status(500).send({ message: "Server Error", err: err.message })
+      );
+  });
 };
 
 const deleteLikeCard = (req, res) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } }, // убрать _id из массива
-    { new: true },
+    { new: true }
   )
+    .then((res) => res.status(200).send({ message: "Лайк убран" }))
+    .catch((err) =>
+      res.status(500).send({ message: "Server Error", err: err.message })
+    );
 };
 
 module.exports = {
