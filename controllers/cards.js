@@ -24,11 +24,22 @@ const createCard = (req, res) => {
 };
 
 const deleteCard = (req, res) => {
-  Card.findByIdAndRemove(req.params.id)
-    .then((card) =>
-      res.status(202).send({ message: "Карточка успешно удалена" })
-    )
-    .catch((err) => res.status(500).send({ message: "Произошла ошибка" }));
+  Card.findByIdAndRemove(req.params.cardId)
+    .then((card) => {
+      if (!card) {
+        res.status(404).send({ message: "Карточка не найдена" });
+        return;
+      };
+      res.status(200).send({ message: "Карточка успешно удалена" })
+    })
+    .catch((err) => {
+      if (typeof req.params.cardId != "ObjectId") {
+        res.status(400).send({ message: "Данные некорректны" });
+        return;
+      };
+      res.status(500).send({ message: "Произошла ошибка" })
+    }
+    );
 };
 
 const likeCard = (req, res) => {
@@ -37,7 +48,13 @@ const likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
     { new: true }
   )
-    .then((card) => res.status(200).send({ message: "Лайк добавлен" }))
+    .then((card) => {
+      if (!card) {
+        res.status(404).send({ message: "Карточка не найдена" });
+        return;
+      }
+      res.status(200).send({ message: "Лайк добавлен" });
+    })
     .catch((err) => {
       if (typeof req.params.cardId != "ObjectId") {
         res.status(400).send({ message: "Данные некорректны" });
@@ -52,10 +69,20 @@ const deleteLikeCard = (req, res) => {
     { $pull: { likes: req.user._id } }, // убрать _id из массива
     { new: true }
   )
-    .then((res) => res.status(200).send({ message: "Лайк убран" }))
-    .catch((err) =>
-      res.status(500).send({ message: "Server Error", err: err.message })
-    );
+    .then((card) => {
+      if (!card) {
+        res.status(404).send({ message: "Карточка не найдена" });
+        return;
+      };
+      res.status(200).send({ message: "Лайк убран" });
+    })
+    .catch((err) => {
+      if (typeof req.params.cardId != "ObjectId") {
+        res.status(400).send({ message: "Данные некорректны" });
+        return;
+      }
+      res.status(500).send({ message: "Server Error", err: err.message });
+    });
 };
 
 module.exports = {
