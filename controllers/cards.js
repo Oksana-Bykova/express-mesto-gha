@@ -36,20 +36,16 @@ const likeCard = (req, res) => {
     req.params.cardId,
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
     { new: true }
-  ).then((card) => {
-    if (!card) {
-      res.status(404).send({ message: "Карточка не найдена" });
-      return;
-    }
-    res
-      .status(200)
-      .send({ message: "Лайк добавлен" })
-      .catch((err) =>
-        res.status(500).send({ message: "Server Error", err: err.message })
-      );
-  });
+  )
+    .then((card) => res.status(200).send({ message: "Лайк добавлен" }))
+    .catch((err) => {
+      if (typeof req.params.cardId != "ObjectId") {
+        res.status(400).send({ message: "Данные некорректны" });
+        return;
+      }
+      res.status(500).send({ message: "Server Error", err: err.message });
+    });
 };
-
 const deleteLikeCard = (req, res) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
