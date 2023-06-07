@@ -9,10 +9,10 @@ const getUsers = (req, res) => {
 };
 
 const getUsersById = (req, res) => {
-  User.findById(req.params.id)
+  User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        res.status(404).send({ message: "Пользователь не найден" });
+        res.status(400).send({ message: "Пользователь не найден" });
         return;
       }
       res.status(200).send(user);
