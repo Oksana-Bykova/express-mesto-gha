@@ -1,44 +1,50 @@
 const User = require("../models/user");
+const bcrypt = require("bcryptjs");
+const jsonWebToken = require('jsonwebtoken');
 
-const getUsers = (req, res) => {
+const getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.status(200).send(users))
-    .catch((err) =>
-      res.status(500).send({ message: "Server Error", err: err.message })
-    );
+    .catch(next);
 };
 
-const getUsersById = (req, res) => {
+const getUsersById = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        res.status(404).send({ message: "Пользователь не найден" });
+        next();
+        return;
+      }
+      res.status(200).send(user);
+    })
+    .catch(next);
+};
+
+const getUserMe = (req, res, next) => {
+  User.findById(req.user._id)
+    .then((user) => {
+      if (!user) {
+        next();
         return;
       };
       res.status(200).send(user);
     })
-    .catch((err) => {
-      if(typeof(req.params.userId) != 'ObjectId' ) {
-        res.status(400).send({ message: "Данные некорректны" });
-        return;
-      }
-      res.status(500).send({ message: "Server Error", err: err.message });
-    });
+    .catch(next);
 };
 
-const createUser = (req, res) => {
-  User.create(req.body)
-    .then((user) => res.status(201).send(user))
-    .catch((err) => {
-      if (err.message.includes("validation failed")) {
-        res.status(400).send({ message: "Введены некорректные данные" });
-      } else {
-        res.status(500).send({ message: "Server Error", err: err.message });
-      }
-    });
+const createUser = (req, res, next) => {
+  const { name, about, avatar, email, password } = req.body;
+  bcrypt
+    .hash(password, 10)
+    .then((hashedPassword) => {
+      User.create({ name, about, avatar, email, password: hashedPassword })
+        .then((user) => res.status(201).send(user))
+        .catch(next);
+    })
+    .catch(next);
 };
 
-const updateProfile = (req, res) => {
+const updateProfile = (req, res, next) => {
   User.findByIdAndUpdate(
     req.user._id,
     {
@@ -49,21 +55,15 @@ const updateProfile = (req, res) => {
   )
     .then((user) => {
       if (!user) {
-        res.status(400).send({ message: "Пользователь не найден" });
+        next();
         return;
       }
       res.status(200).send({ data: user });
     })
-    .catch((err) => {
-      if (err.name === "ValidationError") {
-        res.status(400).send({ message: "Данные некорректны" });
-        return;
-      }
-      res.status(500).send({ message: "Произошла ошибка" });
-    });
+    .catch(next);
 };
 
-const updateAvatar = (req, res) => {
+const updateAvatar = (req, res, next) => {
   User.findByIdAndUpdate(
     req.user._id,
     { avatar: req.body.avatar },
@@ -71,12 +71,42 @@ const updateAvatar = (req, res) => {
   )
     .then((user) => {
       if (!user) {
-        res.status(404).send({ message: "Пользователь не найден" });
+        next();
         return;
       }
       res.send({ data: user });
     })
-    .catch((err) => res.status(500).send({ message: "Произошла ошибка" }));
+    .catch(next);
+};
+
+const login = (req, res, next) => {
+  const { email, password } = req.body;
+
+  if(!email || !password) {
+    next();
+    return;
+  }
+  User.findOne({ email })
+    .select('+password')
+    .orFail(() => new Error("Пользователь не найден"))
+    .then((user) => {
+      bcrypt.compare(String(password), user.password).then((isValidUser) => {
+        if (isValidUser) {
+          const jwt = jsonWebToken.sign({
+            _id: user._id,
+          }, process.env['JWT_SECRET']);
+          res.cookie('jwt', jwt, {
+            maxAge: 360000,
+            httpOnly: true,
+            sameSite: true,
+          });
+          res.send({data: user.toJSON()});
+        } else {
+          res.status(403).send({ message: "Неправильные данные для входа" });
+        }
+      });
+    })
+    .catch(next);
 };
 
 module.exports = {
@@ -85,4 +115,6 @@ module.exports = {
   createUser,
   updateProfile,
   updateAvatar,
+  login,
+  getUserMe,
 };

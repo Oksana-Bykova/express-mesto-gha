@@ -1,48 +1,40 @@
 const Card = require("../models/card");
+const UserNotFound = require('../errors/not-found-err');
+const BadRequest = require('../errors/bad-request');
+const Forbidden = require('../errors/forbidden');
+const Unauthorized = require('../errors/unauthorized');
 
-const getCards = (req, res) => {
+const getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => res.status(200).send(cards))
-    .catch((err) =>
-      res.status(500).send({ message: "Server Error", err: err.message })
-    );
+    .catch(next);
 };
 
-const createCard = (req, res) => {
+const createCard = (req, res, next) => {
   Card.create({
     ...req.body,
     owner: req.user._id,
   })
     .then((card) => res.status(201).send(card))
-    .catch((err) => {
-      if (err.message.includes("validation failed")) {
-        res.status(400).send({ message: "Введены некорректные данные" });
-      } else {
-        res.status(500).send({ message: "Server Error", err: err.message });
-      }
-    });
+    .catch(next);
 };
 
-const deleteCard = (req, res) => {
+const deleteCard = (req, res, next) => {
   Card.findByIdAndRemove(req.params.cardId)
     .then((card) => {
       if (!card) {
-        res.status(404).send({ message: "Карточка не найдена" });
+        next();
+        return;
+      } else if (req.params.cardId !== card.owner.toStrind()) {
+        next();
         return;
       };
-      res.status(200).send({ message: "Карточка успешно удалена" })
+      res.status(200).send({ message: "Карточка успешно удалена" });
     })
-    .catch((err) => {
-      if (typeof req.params.cardId != "ObjectId") {
-        res.status(400).send({ message: "Данные некорректны" });
-        return;
-      };
-      res.status(500).send({ message: "Произошла ошибка" })
-    }
-    );
+    .catch(next);
 };
 
-const likeCard = (req, res) => {
+const likeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } }, // добавить _id в массив, если его там нет
@@ -50,20 +42,15 @@ const likeCard = (req, res) => {
   )
     .then((card) => {
       if (!card) {
-        res.status(404).send({ message: "Карточка не найдена" });
+        next();
         return;
       }
       res.status(200).send({ message: "Лайк добавлен" });
     })
-    .catch((err) => {
-      if (typeof req.params.cardId != "ObjectId") {
-        res.status(400).send({ message: "Данные некорректны" });
-        return;
-      }
-      res.status(500).send({ message: "Server Error", err: err.message });
-    });
+    .catch(next);
 };
-const deleteLikeCard = (req, res) => {
+
+const deleteLikeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } }, // убрать _id из массива
@@ -71,18 +58,12 @@ const deleteLikeCard = (req, res) => {
   )
     .then((card) => {
       if (!card) {
-        res.status(404).send({ message: "Карточка не найдена" });
-        return;
-      };
-      res.status(200).send({ message: "Лайк убран" });
-    })
-    .catch((err) => {
-      if (typeof req.params.cardId != "ObjectId") {
-        res.status(400).send({ message: "Данные некорректны" });
+        next();
         return;
       }
-      res.status(500).send({ message: "Server Error", err: err.message });
-    });
+      res.status(200).send({ message: "Лайк убран" });
+    })
+    .catch(next);
 };
 
 module.exports = {

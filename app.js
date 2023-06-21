@@ -1,8 +1,14 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
 
 const router = require('./routes');
+const errorHandler = require('./middlwares/error');
 const app = express();
+const auth = require('./middlwares/auth');
+
+const { login, createUser } = require('./controllers/users');
 
 mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
   useNewUrlParser: true,
@@ -10,15 +16,16 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb', {
 
 app.use(express.json());
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '647f14b83a589b7c9e36192d',
-  };
 
-  next();
-});
+
+app.post('/signup', createUser);
+app.post('/signin', login);
+app.use(cookieParser());
+app.use(auth);
+
 
 app.use(router);
+app.use(errorHandler);
 
 app.listen(3000, () => {
   console.log("Слушаю порт 3001")
