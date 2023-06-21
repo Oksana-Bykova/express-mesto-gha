@@ -1,11 +1,15 @@
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jsonWebToken = require('jsonwebtoken');
+const UserNotFound = require('../errors/not-found-err');
+const BadRequest = require('../errors/bad-request');
+const Forbidden = require('../errors/forbidden');
+const Unauthorized = require('../errors/unauthorized');
 
 const getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.status(200).send(users))
-    .catch(next);
+    .catch(() => new Unauthorized("Авторизуйтесь на сайте"));
 };
 
 const getUsersById = (req, res, next) => {
@@ -39,7 +43,11 @@ const createUser = (req, res, next) => {
     .then((hashedPassword) => {
       User.create({ name, about, avatar, email, password: hashedPassword })
         .then((user) => res.status(201).send(user))
-        .catch(next);
+        .catch((err) => {
+          if (err.message.includes('validation failed')) {
+            next( new BadRequest("Данные некорректны"))
+          }
+        });
     })
     .catch(next);
 };
