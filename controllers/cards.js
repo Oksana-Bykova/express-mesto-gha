@@ -1,8 +1,8 @@
 const Card = require("../models/card");
-const UserNotFound = require('../errors/not-found-err');
-const BadRequest = require('../errors/bad-request');
-const Forbidden = require('../errors/forbidden');
-const Unauthorized = require('../errors/unauthorized');
+const {UserNotFound} = require('../errors/not-found-err');
+const {BadRequest} = require('../errors/bad-request');
+const {Forbidden} = require('../errors/forbidden');
+const {Unauthorized} = require('../errors/unauthorized');
 
 const getCards = (req, res, next) => {
   Card.find({})
@@ -22,11 +22,12 @@ const createCard = (req, res, next) => {
 const deleteCard = (req, res, next) => {
   Card.findByIdAndRemove(req.params.cardId)
     .then((card) => {
+      console.log(card);
       if (!card) {
-        next();
+        next(new UserNotFound());
         return;
       } else if (req.params.cardId !== card.owner.toStrind()) {
-        next();
+        next(new Forbidden());
         return;
       };
       res.status(200).send({ message: "Карточка успешно удалена" });

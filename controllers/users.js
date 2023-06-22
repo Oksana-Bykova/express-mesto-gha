@@ -1,36 +1,36 @@
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
-const jsonWebToken = require('jsonwebtoken');
-const UserNotFound = require('../errors/not-found-err');
-const BadRequest = require('../errors/bad-request');
-const Forbidden = require('../errors/forbidden');
-const Unauthorized = require('../errors/unauthorized');
-
-const getUsers = (req, res, next) => {
-  User.find({})
-    .then((users) => res.status(200).send(users))
-    .catch(() => new Unauthorized("Авторизуйтесь на сайте"));
-};
+const jsonWebToken = require("jsonwebtoken");
+const { UserNotFound } = require("../errors/not-found-err");
+const {BadRequest} = require("../errors/bad-request");
+const {Forbidden} = require("../errors/forbidden");
+const {Unauthorized }= require("../errors/unauthorized");
 
 const getUsersById = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        next();
-        return;
+        next(new UserNotFound());
+      return;
       }
       res.status(200).send(user);
     })
     .catch(next);
 };
 
+const getUsers = (req, res, next) => {
+  User.find({})
+    .then((users) => res.status(200).send(users))
+    .catch((err) => next(err));
+};
+
 const getUserMe = (req, res, next) => {
   User.findById(req.user._id)
     .then((user) => {
       if (!user) {
-        next();
+        next(new UserNotFound());
         return;
-      };
+      }
       res.status(200).send(user);
     })
     .catch(next);
@@ -44,9 +44,9 @@ const createUser = (req, res, next) => {
       User.create({ name, about, avatar, email, password: hashedPassword })
         .then((user) => res.status(201).send(user))
         .catch((err) => {
-          if (err.message.includes('validation failed')) {
-            next( new BadRequest("Данные некорректны"))
-          }
+          //if (err.message.includes("validation failed")) {
+            next(new BadRequest());
+          //}
         });
     })
     .catch(next);
@@ -63,7 +63,7 @@ const updateProfile = (req, res, next) => {
   )
     .then((user) => {
       if (!user) {
-        next();
+        next(new BadRequest());
         return;
       }
       res.status(200).send({ data: user });
@@ -79,7 +79,7 @@ const updateAvatar = (req, res, next) => {
   )
     .then((user) => {
       if (!user) {
-        next();
+        next(new BadRequest());
         return;
       }
       res.send({ data: user });
@@ -90,27 +90,31 @@ const updateAvatar = (req, res, next) => {
 const login = (req, res, next) => {
   const { email, password } = req.body;
 
-  if(!email || !password) {
+  if (!email || !password) {
     next();
     return;
   }
   User.findOne({ email })
-    .select('+password')
-    .orFail(() => new Error("Пользователь не найден"))
+    .select("+password")
+    .orFail(() => new UserNotFound())
     .then((user) => {
       bcrypt.compare(String(password), user.password).then((isValidUser) => {
         if (isValidUser) {
-          const jwt = jsonWebToken.sign({
-            _id: user._id,
-          }, process.env['JWT_SECRET']);
-          res.cookie('jwt', jwt, {
+          const jwt = jsonWebToken.sign(
+            {
+              _id: user._id,
+            },
+            process.env["JWT_SECRET"]
+          );
+          res.cookie("jwt", jwt, {
             maxAge: 360000,
             httpOnly: true,
             sameSite: true,
           });
-          res.send({data: user.toJSON()});
+          res.send({ data: user.toJSON() });
         } else {
-          res.status(403).send({ message: "Неправильные данные для входа" });
+          //res.status(403).send({ message: "Неправильные данные для входа" });
+          next(new Forbidden());
         }
       });
     })

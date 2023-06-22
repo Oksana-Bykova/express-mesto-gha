@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-
+const { Unauthorized }= require('../errors/unauthorized');
 
 const auth = (req, res, next) => {
 
@@ -9,10 +9,11 @@ const auth = (req, res, next) => {
 
   try {
     payload = jwt.verify(token, process.env['JWT_SECRET']);
-   
+
   } catch (err) {
-    next(err);
-  }
+    next(new Unauthorized('Авторизуйтесь на сайте'));
+    }
+
 
   req.user = payload;
 
