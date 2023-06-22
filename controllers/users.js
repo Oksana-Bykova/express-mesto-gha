@@ -125,8 +125,6 @@ const login = (req, res, next) => {
           });
           res.status(200).send({ data: user.toJSON() });
         } else {
-          //res.status(403).send({ message: "Неправильные данные для входа" });
-          //тест заглючил
           next(new Forbidden());
         }
       });
