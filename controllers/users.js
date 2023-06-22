@@ -113,7 +113,7 @@ const login = (req, res, next) => {
             httpOnly: true,
             sameSite: true,
           });
-          res.status(200)res.send({ data: user.toJSON() });
+          res.status(200).res.send({ data: user.toJSON() });
         } else {
           //res.status(403).send({ message: "Неправильные данные для входа" });
           next(new Forbidden());
