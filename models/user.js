@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
-module.exports.regul = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,}\.[a-zA-Z0-9()]{2,}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/m;
+//module.exports.regul = /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,}\.[a-zA-Z0-9()]{2,}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/m;
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -21,9 +21,9 @@ const userSchema = new mongoose.Schema({
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
     type: String,
     required: [true, 'Поле "avatar" должно быть заполнено'],
-   validate: {
-     validator: (v) =>  regul.isEmail(v),
-   message: "Проверьте правильность email"},
+  // validate: {
+   //  validator: (v) =>  regul.isEmail(v),
+   //message: "Проверьте правильность email"},
   },
   email: {
     required: [true, 'Поле "email" должно быть заполнено'],

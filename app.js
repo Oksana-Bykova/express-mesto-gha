@@ -23,16 +23,27 @@ app.post(
   "/signup",
   celebrate({
     body: Joi.object().keys({
-      email: Joi.string().required(),
+      email: Joi.string().email().required(),
       password: Joi.string().required(),
       name: Joi.string().min(2).max(30),
       about: Joi.string().min(3).max(30),
-      avatar: Joi.string().pattern(new RegExp(regul)),
+      avatar: Joi.string().regex(
+        /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,}\.[a-zA-Z0-9()]{2,}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/m
+      ),
     }),
   }),
   createUser
 );
-app.post("/signin", login);
+app.post(
+  "/signin",
+  celebrate({
+    body: Joi.object().keys({
+      email: Joi.string().email().required(),
+      password: Joi.string().required(),
+    }),
+  }),
+  login
+);
 app.use(cookieParser());
 app.use(auth);
 

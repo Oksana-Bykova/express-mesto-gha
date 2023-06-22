@@ -2,17 +2,17 @@ const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jsonWebToken = require("jsonwebtoken");
 const { UserNotFound } = require("../errors/not-found-err");
-const {BadRequest} = require("../errors/bad-request");
-const {Forbidden} = require("../errors/forbidden");
-const {Unauthorized }= require("../errors/unauthorized");
-const {ConflictingRequest} = require("../errors/conflicting-request");
+const { BadRequest } = require("../errors/bad-request");
+const { Forbidden } = require("../errors/forbidden");
+const { Unauthorized } = require("../errors/unauthorized");
+const { ConflictingRequest } = require("../errors/conflicting-request");
 
 const getUsersById = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
         next(new UserNotFound());
-      return;
+        return;
       }
       res.status(200).send(user);
     })
@@ -40,16 +40,26 @@ const getUserMe = (req, res, next) => {
 const createUser = (req, res, next) => {
   const { name, about, avatar, email, password } = req.body;
 
-  bcrypt
-    .hash(password, 10)
-    .then((hashedPassword) => {
-      User.create({ name, about, avatar, email, password: hashedPassword })
-        .then((user) => res.status(201).send(user))
-        .catch((err) => {
-          //if (err.message.includes("validation failed")) {
-            next(new ConflictingRequest());
-          //}
-        });
+  User.findOne({ email })
+    .then((user) => {
+      if (!user) {
+        bcrypt
+          .hash(password, 10)
+          .then((hashedPassword) => {
+            User.create({
+              name,
+              about,
+              avatar,
+              email,
+              password: hashedPassword,
+            })
+              .then((user) => res.status(201).send(user))
+              .catch(next);
+          })
+          .catch(next);
+      } else {
+        next(new ConflictingRequest());
+      }
     })
     .catch(next);
 };
@@ -98,7 +108,7 @@ const login = (req, res, next) => {
   }
   User.findOne({ email })
     .select("+password")
-    .orFail(() => new BadRequest())
+    .orFail(() => new Unauthorized())
     .then((user) => {
       bcrypt.compare(String(password), user.password).then((isValidUser) => {
         if (isValidUser) {

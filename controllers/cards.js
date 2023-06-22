@@ -43,7 +43,7 @@ const likeCard = (req, res, next) => {
   )
     .then((card) => {
       if (!card) {
-        next();
+        next(new UserNotFound());
         return;
       }
       res.status(200).send({ message: "Лайк добавлен" });
@@ -59,7 +59,7 @@ const deleteLikeCard = (req, res, next) => {
   )
     .then((card) => {
       if (!card) {
-        next();
+        next(new UserNotFound());
         return;
       }
       res.status(200).send({ message: "Лайк убран" });
