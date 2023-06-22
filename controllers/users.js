@@ -5,6 +5,7 @@ const { UserNotFound } = require("../errors/not-found-err");
 const {BadRequest} = require("../errors/bad-request");
 const {Forbidden} = require("../errors/forbidden");
 const {Unauthorized }= require("../errors/unauthorized");
+const {ConflictingRequest} = require("../errors/conflicting-request");
 
 const getUsersById = (req, res, next) => {
   User.findById(req.params.userId)
@@ -38,6 +39,7 @@ const getUserMe = (req, res, next) => {
 
 const createUser = (req, res, next) => {
   const { name, about, avatar, email, password } = req.body;
+
   bcrypt
     .hash(password, 10)
     .then((hashedPassword) => {
@@ -45,7 +47,7 @@ const createUser = (req, res, next) => {
         .then((user) => res.status(201).send(user))
         .catch((err) => {
           //if (err.message.includes("validation failed")) {
-            next(new BadRequest());
+            next(new ConflictingRequest());
           //}
         });
     })
@@ -91,12 +93,12 @@ const login = (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    next();
+    next(new Unauthorized());
     return;
   }
   User.findOne({ email })
     .select("+password")
-    .orFail(() => new UserNotFound())
+    .orFail(() => new BadRequest())
     .then((user) => {
       bcrypt.compare(String(password), user.password).then((isValidUser) => {
         if (isValidUser) {

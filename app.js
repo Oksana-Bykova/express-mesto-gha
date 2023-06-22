@@ -7,6 +7,8 @@ const router = require('./routes');
 const errorHandler = require('./middlwares/error');
 const app = express();
 const auth = require('./middlwares/auth');
+const { celebrate, Joi } = require('celebrate');
+const { errors } = require('celebrate');
 
 const { login, createUser } = require('./controllers/users');
 
@@ -25,6 +27,7 @@ app.use(auth);
 
 
 app.use(router);
+app.use(errors());
 app.use(errorHandler);
 
 app.listen(3000, () => {
