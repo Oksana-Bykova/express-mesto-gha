@@ -17,6 +17,7 @@ mongoose.connect("mongodb://127.0.0.1:27017/mestodb", {
   useNewUrlParser: true,
 });
 
+
 app.use(express.json());
 
 app.post(
@@ -36,12 +37,12 @@ app.post(
 );
 app.post(
   "/signin",
-  celebrate({
-    body: Joi.object().keys({
-      email: Joi.string().email().required(),
-      password: Joi.string().required(),
-    }),
-  }),
+ // celebrate({
+  //  body: Joi.object().keys({
+  //    email: Joi.string().email().required(),
+  //    password: Joi.string().required(),
+  //  }),
+  //}),
   login
 );
 app.use(cookieParser());
