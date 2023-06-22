@@ -9,6 +9,7 @@ const app = express();
 const auth = require("./middlwares/auth");
 const { celebrate, Joi } = require("celebrate");
 const { errors } = require("celebrate");
+const { regul } = require("./models/user");
 
 const { login, createUser } = require("./controllers/users");
 
@@ -22,8 +23,11 @@ app.post(
   "/signup",
   celebrate({
     body: Joi.object().keys({
-      email: Joi.string().required().email(),
+      email: Joi.string().required(),
       password: Joi.string().required(),
+      name: Joi.string().min(2).max(30),
+      about: Joi.string().min(3).max(30),
+      avatar: Joi.string().pattern(new RegExp(regul)),
     }),
   }),
   createUser
