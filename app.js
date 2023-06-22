@@ -9,7 +9,7 @@ const app = express();
 const auth = require("./middlwares/auth");
 const { celebrate, Joi } = require("celebrate");
 const { errors } = require("celebrate");
-//const { regul } = require("./models/user");
+const { regul } = require("./models/user");
 
 const { login, createUser } = require("./controllers/users");
 
