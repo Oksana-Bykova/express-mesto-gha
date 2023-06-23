@@ -4,7 +4,7 @@ class UserNotFound extends Error {
     this.message = 'Не найдено';
     this.statusCode = 404;
   }
-};
+}
 
 module.exports = {
   UserNotFound,

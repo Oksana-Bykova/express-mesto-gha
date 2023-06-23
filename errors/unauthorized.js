@@ -4,7 +4,7 @@ class Unauthorized extends Error {
     this.message = 'Авторизуйтесь';
     this.statusCode = 401;
   }
-};
+}
 
 module.exports = {
   Unauthorized,

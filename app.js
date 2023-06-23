@@ -9,8 +9,7 @@ const app = express();
 const auth = require("./middlwares/auth");
 const { celebrate, Joi } = require("celebrate");
 const { errors } = require("celebrate");
-const { regul } = require("./models/user");
-
+const { RegURL } = require("./utils/constants");
 const { login, createUser } = require("./controllers/users");
 
 mongoose.connect("mongodb://127.0.0.1:27017/mestodb", {
@@ -27,9 +26,7 @@ app.post(
       password: Joi.string().required(),
       name: Joi.string().min(2).max(30),
       about: Joi.string().min(3).max(30),
-      avatar: Joi.string().regex(
-        /^https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,}\.[a-zA-Z0-9()]{2,}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*)$/m
-      ),
+      avatar: Joi.string().regex(RegURL),
     }),
   }),
   createUser
@@ -48,6 +45,9 @@ app.post(
 
 app.use(cookieParser());
 app.use(auth);
+app.get('/signout', (req, res) => {
+  res.clearCookie('jwt').send({ message: 'Выход' });
+}); 
 
 app.use(router);
 app.use(errors());
