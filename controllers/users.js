@@ -118,27 +118,24 @@ const login = (req, res, next) => {
     .select('+password')
     .orFail(() => new Unauthorized())
     .then((user) =>
-      return bcrypt
-        .compare(String(password), user.password)
-        .then((isValidUser) => {
-          if (isValidUser) {
-            const jwt = jsonWebToken.sign(
-              {
-                _id: user._id,
-              },
-              "SECRET"
-            );
-            res.cookie("jwt", jwt, {
-              maxAge: 360000,
-              httpOnly: true,
-              sameSite: true,
-            });
-            res.status(200).send({ data: user.toJSON() });
-          } else {
-            next(new Unauthorized());
-          }
-        })
+      return bcrypt.compare(String(password), user.password);
     )
+    .then((isValidUser) => {
+      if (isValidUser) {
+        const jwt = jsonWebToken.sign({
+          _id: user._id,
+        }, 'SECRET');
+        res.cookie('jwt', jwt, {
+          maxAge: 360000,
+          httpOnly: true,
+          sameSite: true,
+        });
+        res.status(200).send({ data: user.toJSON() });
+      } else {
+        next(new Unauthorized());
+      }
+    })
+
     .catch(next);
 };
 
