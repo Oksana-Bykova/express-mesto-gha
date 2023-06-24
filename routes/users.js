@@ -15,11 +15,11 @@ const idValid = celebrate({
   }),
 });
 
-router.get('/users', idValid, getUsers);
+router.get('/users', getUsers);
 
 router.get('/users/me', getUserMe);
 
-router.get('/users/:userId', getUsersById);
+router.get('/users/:userId', idValid, getUsersById);
 
 router.patch(
   '/users/me',
