@@ -11,7 +11,7 @@ const { RegURL } = require('../utils/constants');
 
 const idValid = celebrate({
   params: Joi.object().keys({
-    cardId: Joi.string().length(24).hex().required(),
+    userId: Joi.string().length(24).hex().required(),
   }),
 });
 
