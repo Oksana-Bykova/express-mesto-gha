@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const { celebrate, Joi } = require('celebrate');
 const { errors } = require('celebrate');
+
+const path = require('node:path');
 const router = require('./routes');
 
 const errorHandler = require('./middlwares/error');
@@ -55,8 +57,8 @@ app.get('/signout', (req, res) => {
   res.clearCookie('jwt').send({ message: 'Выход' });
 });
 
-//app.use(router);
-app.use('/api', require('../router'));
+// app.use(router);
+app.use('/api', router);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(errorLogger);
 app.use(errors());
